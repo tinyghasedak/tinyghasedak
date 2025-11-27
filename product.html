@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>جزئیات محصول</title>
+
+<style>
+*{margin:0;padding:0;box-sizing:border-box;font-family:"Vazirmatn",sans-serif;}
+
+body{
+    background:linear-gradient(135deg,#2ab5ff 0%, #86e4ff 30%, #ffffff 80%);
+    min-height:100vh;
+    padding:20px;
+}
+
+/* گالری عکس */
+#galleryBox{
+    background:white;
+    padding:15px;
+    border-radius:14px;
+    box-shadow:0 5px 15px rgba(0,0,0,0.2);
+    text-align:center;
+}
+#galleryBox img{
+    width:100%;
+    max-height:320px;
+    object-fit:contain;
+    border-radius:12px;
+}
+#galleryControls{
+    display:flex;
+    justify-content:space-between;
+    margin-top:10px;
+}
+.galleryBtn{
+    background:#2196f3;
+    color:white;
+    border:none;
+    padding:10px 20px;
+    border-radius:10px;
+    cursor:pointer;
+    font-size:16px;
+}
+
+/* اطلاعات محصول */
+#info{
+    margin-top:20px;
+    background:white;
+    padding:15px;
+    border-radius:14px;
+    box-shadow:0 5px 12px rgba(0,0,0,0.15);
+    font-size:18px;
+}
+
+.btn{
+    width:100%;
+    padding:12px;
+    margin-top:10px;
+    border:none;
+    border-radius:10px;
+    font-size:18px;
+    cursor:pointer;
+}
+.btn-blue{background:#2196f3;color:white;}
+.btn-red{background:#d60000;color:white;}
+</style>
+</head>
+<body>
+
+<div id="galleryBox">
+    <img id="mainImg">
+
+    <div id="galleryControls">
+        <button class="galleryBtn" onclick="prevImg()">❮ قبلی</button>
+        <button class="galleryBtn" onclick="nextImg()">بعدی ❯</button>
+    </div>
+</div>
+
+<div id="info">
+    <h2 id="pName"></h2>
+    <p id="pPrice"></p>
+
+    <button class="btn btn-blue" onclick="addToCart()">افزودن به سبد خرید</button>
+    <button class="btn btn-red" onclick="history.back()">بازگشت</button>
+</div>
+
+<script>
+// دریافت اطلاعات از URL
+const urlParams = new URLSearchParams(window.location.search);
+const name = urlParams.get("name");
+const price = urlParams.get("price");
+const img = urlParams.get("img");
+
+// چون فقط یک عکس داریم، گالری تک‌عکس است
+let images = [img];
+let index = 0;
+
+// نمایش اطلاعات
+document.getElementById("pName").innerText = name;
+document.getElementById("pPrice").innerText = price + " تومان";
+document.getElementById("mainImg").src = img;
+
+// دکمه‌های ورق‌زدن (فعلاً تک عکس، ولی آماده چندعکس است)
+function nextImg(){
+    index = (index + 1) % images.length;
+    document.getElementById("mainImg").src = images[index];
+}
+function prevImg(){
+    index = (index - 1 + images.length) % images.length;
+    document.getElementById("mainImg").src = images[index];
+}
+
+// افزودن به سبد خرید
+function addToCart(){
+    let cart = JSON.parse(localStorage.getItem("cart") || "[]");
+
+    let item = cart.find(p => p.name === name);
+    if(item) item.count++;
+    else cart.push({name, price, img, count:1});
+
+    localStorage.setItem("cart", JSON.stringify(cart));
+    alert("به سبد خرید اضافه شد");
+}
+</script>
+
+</body>
+</html>
