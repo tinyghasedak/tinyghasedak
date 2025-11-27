@@ -1,0 +1,424 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tiny Ghasedak</title>
+<style>
+* {box-sizing:border-box;}
+body {
+  font-family:"Vazirmatn",sans-serif;
+  margin:0;
+  background:#fafafa;
+  color:#000;
+  transition:0.3s;
+}
+body.dark { background:#121212; color:#fff; }
+
+header {
+  background:#e20000;
+  color:white;
+  padding:15px;
+  text-align:center;
+  font-size:22px;
+  margin-bottom:10px;
+  position:relative;
+}
+header input {
+  margin-top:10px;
+  padding:5px;
+  width:70%;
+  max-width:250px;
+  border-radius:8px;
+  border:none;
+  font-size:16px;
+}
+#themeToggle {
+  position:absolute;
+  left:15px;
+  top:15px;
+  padding:5px 10px;
+  background:rgba(255,255,255,0.2);
+  border:none;
+  border-radius:8px;
+  cursor:pointer;
+  color:white;
+  font-weight:bold;
+}
+body.dark #themeToggle { background:rgba(0,0,0,0.3); color:white; }
+
+#cartIcon {
+  position:absolute;
+  right:15px;
+  top:15px;
+  cursor:pointer;
+  font-size:24px;
+}
+#cartCount {
+  position:absolute;
+  top:-5px;
+  right:-5px;
+  background:red;
+  color:white;
+  font-size:12px;
+  padding:2px 5px;
+  border-radius:50%;
+}
+
+#products{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(150px,1fr));
+  gap:15px;
+  padding:15px;
+}
+.item{
+  background:white;
+  padding:10px;
+  border-radius:12px;
+  box-shadow:0 4px 8px rgba(0,0,0,.1);
+  cursor:pointer;
+  transition:0.3s;
+  text-align:center;
+}
+body.dark .item{
+  background:#1e1e1e;
+  box-shadow:0 4px 8px rgba(255,255,255,.1);
+}
+.item:hover{ transform:scale(1.05); }
+.item img{ width:100%; border-radius:10px; }
+
+button { cursor:pointer; }
+
+/* مودال محصول */
+#modal{
+  position:fixed;
+  top:0;
+  left:0;
+  width:100%;
+  height:100%;
+  background:rgba(0,0,0,.6);
+  display:none;
+  justify-content:center;
+  align-items:center;
+  z-index:100;
+}
+#modalContent{
+  background:white;
+  padding:20px;
+  border-radius:12px;
+  width:90%;
+  max-width:350px;
+  text-align:center;
+}
+body.dark #modalContent{ background:#1e1e1e; color:white; }
+
+/* سبد خرید پایین صفحه */
+#cartContent{
+  position:fixed;
+  bottom:0;
+  left:0;
+  width:100%;
+  max-height:60vh;
+  background:white;
+  box-shadow:0 -2px 10px rgba(0,0,0,0.2);
+  padding:10px 15px;
+  z-index:200;
+  border-top-left-radius:12px;
+  border-top-right-radius:12px;
+  overflow-y:auto;
+  transition:0.3s;
+}
+body.dark #cartContent{ background:#1e1e1e; color:white; }
+#cartContent h3{margin-top:0;}
+#cartContent ul{list-style:none;padding:0;margin:0;}
+#cartContent li{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  padding:5px 0;
+  border-bottom:1px solid #ccc;
+}
+body.dark #cartContent li{border-color:#555;}
+#cartContent li img{width:50px;height:50px;object-fit:cover;border-radius:8px;margin-left:10px;}
+
+/* دکمه های تعداد */
+.quantityControl{
+  display:flex;
+  align-items:center;
+  border:1px solid #ccc;
+  border-radius:8px;
+  overflow:hidden;
+  margin-left:10px;
+}
+.quantityControl button{
+  border:none;
+  background:#e20000;
+  color:white;
+  font-weight:bold;
+  padding:5px 10px;
+  font-size:16px;
+  transition:0.2s;
+}
+.quantityControl button:hover{ background:#c10000; }
+.quantityControl span{
+  display:inline-block;
+  padding:5px 10px;
+  min-width:25px;
+  text-align:center;
+  background:#f5f5f5;
+  font-weight:bold;
+}
+body.dark .quantityControl span{ background:#555; color:white; }
+
+#cartContent .removeBtn{
+  background:#ccc;
+  border:none;
+  padding:3px 6px;
+  border-radius:6px;
+  margin-left:5px;
+}
+#cartContent .removeBtn:hover{ background:#e20000; color:white; }
+
+#payButton{
+  margin-top:10px;
+  background:#e20000;
+  color:white;
+  border:none;
+  border-radius:8px;
+  width:100%;
+  padding:10px 0;
+  font-size:16px;
+}
+
+/* لایه کمرنگ پشت ادامه فرایند خرید */
+#overlayContent{
+  position:fixed;
+  top:0; left:0;
+  width:100%; height:100%;
+  background:rgba(0,0,0,0.7);
+  display:none;
+  justify-content:center;
+  align-items:center;
+  z-index:300;
+}
+
+/* کادر ادامه فرایند خرید */
+#checkoutOverlayContent{
+  background:white;
+  width:90%;
+  max-width:400px;
+  max-height:80vh;
+  overflow-y:auto;
+  padding:20px;
+  border-radius:12px;
+  text-align:center;
+  z-index:400;
+}
+body.dark #checkoutOverlayContent{ background:#1e1e1e; color:white; }
+#checkoutOverlayContent ul{list-style:none;padding:0;margin:0;}
+#checkoutOverlayContent li{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  padding:5px 0;
+  border-bottom:1px solid #ccc;
+}
+body.dark #checkoutOverlayContent li{ border-color:#555; }
+#checkoutOverlayContent li img{width:50px;height:50px;object-fit:cover;border-radius:8px;margin-left:10px;}
+#checkoutOverlayContent p.infoText{margin-top:10px;font-size:14px;color:#555;}
+#backButton{
+  margin-top:10px;
+  background:#e20000;
+  color:#fff;
+  border:none;
+  border-radius:8px;
+  width:100%;
+  padding:10px 0;
+  font-size:16px;
+}
+</style>
+</head>
+<body>
+
+<header>
+  <button id="themeToggle">🌙</button>
+  فروشگاه Tiny Ghasedak
+  <span id="cartIcon">🛒<span id="cartCount">0</span></span>
+  <br>
+  <input type="text" id="search" placeholder="جستجوی محصول...">
+</header>
+
+<div id="products">
+  <div class="item" onclick="showModal('شال ریز بافت طرح دار','285000','Shal1.jpg')">
+    <img src="Shal1.jpg" alt="شال ریز بافت طرح دار">
+    <p>شال ریز بافت طرح دار</p>
+  </div> 
+
+  <div class="item" onclick="showModal('شال بافت ریز','285000','Shal2.jpg')">
+    <img src="Shal2.jpg" alt="شال بافت ریز">
+    <p>شال بافت ریز</p>
+  </div>
+
+ <div class="item" onclick="showModal('شال اسلپ پیگمنت منگوله دار  ','235000','Shal3.jpg')">
+    <img src="Shal3.jpg" alt="شال اسلپ پیگمنت منگوله دار">
+    <p>شال اسلپ پیگمنت منگوله دار</p>
+  </div>
+
+ <div class="item" onclick="showModal('شال نخی کندوئی منگوله دار ۱','215000','Shal4.jpg')">
+    <img src="Shal4.jpg" alt="شال نخی کندوئی منگوله دار ۱">
+    <p> شال نخی کندوئی منگوله دار ۱</p>
+  </div>
+
+ <div class="item" onclick="showModal('شال نخی کندوئی منگوله دار ۲','215000','Shal5.jpg')">
+    <img src="Shal5.jpg" alt="شال نخی کندوئی منگوله دار ۲">
+    <p>شال نخی کندوئی منگوله دار ۲</p>
+  </div>
+</div>
+
+<!-- مودال محصول -->
+<div id="modal" onclick="closeModal()">
+  <div id="modalContent" onclick="event.stopPropagation()">
+    <h3 id="mTitle"></h3>
+    <p id="mPrice"></p>
+    <button id="addToCartBtn" onclick="addToCart()">افزودن به سبد خرید</button>
+    <button onclick="closeModal()" style="background:#e20000;color:white;padding:8px 15px;border:none;border-radius:8px;margin-top:10px">بستن</button>
+  </div>
+</div>
+
+<!-- سبد خرید پایین صفحه -->
+<div id="cartContent">
+  <h3>سبد خرید شما</h3>
+  <ul id="cartItems"></ul>
+  <p id="emptyCartText">سبد خرید خالی است</p>
+  <p>جمع کل: <span id="cartTotal">0</span> تومان</p>
+  <button id="payButton">ادامه</button>
+</div>
+
+<!-- لایه کمرنگ ادامه فرایند خرید -->
+<div id="overlayContent">
+  <div id="checkoutOverlayContent">
+    <h3>جزئیات سفارش شما</h3>
+    <ul id="checkoutItems"></ul>
+    <p style="font-weight:bold;margin-top:10px;">جمع کل: <span id="checkoutTotal">0</span> تومان</p>
+    <p class="infoText">جهت تکمیل فرایند خرید اسکرین شات این قسمت را داخل داییرکت ارسال کنید</p>
+    <button id="backButton">بازگشت</button>
+  </div>
+</div>
+
+<script>
+let cart=[];
+let selectedProduct={};
+
+function showModal(title,price,img){
+  selectedProduct={title,price:parseInt(price),img,quantity:1};
+  document.getElementById("mTitle").innerText=title;
+  document.getElementById("mPrice").innerText="قیمت: "+Number(price).toLocaleString()+" تومان";
+  document.getElementById("modal").style.display="flex";
+}
+function closeModal(){ document.getElementById("modal").style.display="none"; }
+
+function addToCart(){
+  const existing=cart.find(item=>item.title===selectedProduct.title);
+  if(existing){ existing.quantity+=1; } else{ cart.push({...selectedProduct}); }
+  updateCart();
+  closeModal();
+}
+
+function updateCart(){
+  const cartItems=document.getElementById('cartItems');
+  const emptyCartText=document.getElementById('emptyCartText');
+  cartItems.innerHTML='';
+  let total=0;
+  if(cart.length===0){ emptyCartText.style.display='block'; }
+  else{ emptyCartText.style.display='none'; }
+
+  cart.forEach((item,index)=>{
+    const li=document.createElement('li');
+    li.innerHTML=`<div style="display:flex;align-items:center">
+                    <img src="${item.img}" alt="${item.title}">
+                    <span>${item.title}</span>
+                    <div class="quantityControl">
+                      <button onclick="changeQuantity(${index},-1)">-</button>
+                      <span>${item.quantity}</span>
+                      <button onclick="changeQuantity(${index},1)">+</button>
+                    </div>
+                  </div>
+                  <div>
+                    <span>${Number(item.price*item.quantity).toLocaleString()} تومان</span>
+                    <button class="removeBtn" onclick="removeItem(${index})">×</button>
+                  </div>`;
+    cartItems.appendChild(li);
+    total+=item.price*item.quantity;
+  });
+  document.getElementById('cartTotal').innerText=total.toLocaleString();
+  document.getElementById('cartCount').innerText=cart.reduce((sum,i)=>sum+i.quantity,0);
+}
+
+function changeQuantity(index,delta){
+  cart[index].quantity += delta;
+  if(cart[index].quantity<1) cart[index].quantity=1;
+  updateCart();
+}
+function removeItem(index){ cart.splice(index,1); updateCart(); }
+
+document.getElementById('themeToggle').addEventListener('click',()=>{
+  document.body.classList.toggle('dark');
+  document.getElementById('themeToggle').innerText=document.body.classList.contains('dark')?'☀️':'🌙';
+});
+
+document.getElementById('search').addEventListener('input',function(){
+  let filter=this.value.toLowerCase();
+  document.querySelectorAll('#products .item').forEach(item=>{
+    let text=item.querySelector('p').innerText.toLowerCase();
+    item.style.display=text.includes(filter)?'':'none';
+  });
+});
+
+document.getElementById('cartIcon').addEventListener('click',()=>{
+  const cartDiv=document.getElementById('cartContent');
+  cartDiv.style.display = cartDiv.style.display==='block'?'none':'block';
+});
+
+// ادامه فرایند خرید
+const overlay=document.getElementById('overlayContent');
+const checkoutItems=document.getElementById('checkoutItems');
+const checkoutTotal=document.getElementById('checkoutTotal');
+const backButton=document.getElementById('backButton');
+
+document.getElementById('payButton').onclick=function(){
+  if(cart.length===0) return alert('سبد خرید خالی است');
+  overlay.style.display="flex";
+  document.querySelectorAll('body > *:not(#cartContent):not(#overlayContent)').forEach(el=>{
+    el.style.pointerEvents="none";
+    el.style.opacity="0.5";
+  });
+
+  checkoutItems.innerHTML='';
+  let total=0;
+  cart.forEach(item=>{
+    const li=document.createElement('li');
+    li.style.display='flex';
+    li.style.alignItems='center';
+    li.style.justifyContent='space-between';
+    li.style.marginBottom='8px';
+    li.innerHTML=`<div style="display:flex;align-items:center">
+                    <img src="${item.img}" style="width:50px;height:50px;object-fit:cover;border-radius:8px;margin-left:10px;">
+                    <span>${item.title} × ${item.quantity}</span>
+                  </div>
+                  <span>${Number(item.price*item.quantity).toLocaleString()} تومان</span>`;
+    checkoutItems.appendChild(li);
+    total+=item.price*item.quantity;
+  });
+  checkoutTotal.innerText=total.toLocaleString();
+}
+
+backButton.onclick=function(){
+  overlay.style.display="none";
+  document.querySelectorAll('body > *:not(#cartContent)').forEach(el=>{
+    el.style.pointerEvents="auto";
+    el.style.opacity="1";
+  });
+}
+</script>
+</body>
+</html>
