@@ -67,7 +67,7 @@ header h1{font-size:24px;margin-bottom:10px;}
 }
 #productInfo{padding:20px;}
 
-/* cart panel — شیشه‌ای + باز شدن از چپ */
+/* cart panel */
 #cartPanel{
     position:fixed;
     top:0;
@@ -77,19 +77,42 @@ header h1{font-size:24px;margin-bottom:10px;}
 
     background:rgba(255,255,255,0.2);
     backdrop-filter:blur(18px);
-    -webkit-backdrop-filter:blur(18px);
-
     box-shadow:4px 0 15px rgba(0,0,0,0.25);
     padding:20px;
     transition:.35s;
     z-index:9999;
-
     border-left:1px solid rgba(255,255,255,0.3);
 }
-#cartPanel h3{margin-bottom:10px;}
-#cartItems{max-height:70vh;overflow-y:auto;}
 
-/* buttons */
+.cartItem{
+    padding:10px;
+    margin-bottom:12px;
+    background:white;
+    border-radius:10px;
+    box-shadow:0 2px 8px rgba(0,0,0,.15);
+}
+
+.qtyBox{
+    display:flex;
+    align-items:center;
+    border:1px solid #aaa;
+    border-radius:8px;
+    overflow:hidden;
+    width:85px;
+    margin-top:5px;
+}
+.qtyBox button{
+    background:#2196f3;color:white;
+    border:none;padding:5px 10px;font-size:18px;
+}
+.qtyBox span{
+    background:white;
+    padding:5px 12px;
+    display:block;
+    width:30px;
+    text-align:center;
+}
+
 .btn{
     width:100%;padding:12px;border:none;
     border-radius:12px;font-size:17px;
@@ -97,6 +120,29 @@ header h1{font-size:24px;margin-bottom:10px;}
 }
 .blue{background:#2196f3;color:white;}
 .red{background:#e20000;color:white;}
+
+/* checkout overlay */
+#overlay{
+    position:fixed;top:0;left:0;
+    width:100%;height:100%;
+    background:rgba(0,0,0,0.45);
+    backdrop-filter:blur(6px);
+    display:none;justify-content:center;align-items:center;
+    z-index:99999;
+}
+#checkoutBox{
+    background:white;padding:20px;
+    border-radius:14px;
+    width:90%;max-width:400px;
+    max-height:80vh;overflow-y:auto;
+    animation:fade .25s ease;
+}
+@keyframes fade{0%{opacity:0;transform:scale(.8);}100%{opacity:1;transform:scale(1);}}
+
+.line{
+    border-bottom:1px solid #ccc;
+    margin:10px 0;
+}
 </style>
 </head>
 <body>
@@ -145,89 +191,151 @@ header h1{font-size:24px;margin-bottom:10px;}
 <div id="cartPanel">
     <h3>سبد خرید</h3>
     <div id="cartItems"></div>
+
+    <button class="btn blue" onclick="openCheckout()">ادامه</button>
     <button class="btn red" onclick="closeCart()">بستن</button>
+</div>
+
+<!-- CHECKOUT -->
+<div id="overlay">
+    <div id="checkoutBox">
+        <h3>جزئیات سفارش</h3>
+        <div id="checkoutList"></div>
+
+        <div class="line"></div>
+        <p style="font-size:16px;font-weight:bold">
+            جمع کل: <span id="checkoutSum">0</span> تومان
+        </p>
+
+        <p style="font-size:14px;color:#444;margin-top:10px;">
+            برای تکمیل سفارش، از این صفحه اسکرین‌شات بگیرید و داخل دایرکت ارسال کنید.
+        </p>
+
+        <button class="btn blue" onclick="closeCheckout()">بازگشت</button>
+    </div>
 </div>
 
 <script>
 let cart = JSON.parse(localStorage.getItem("cart") || "[]");
 updateCartCount();
 
-/* — search — */
-document.getElementById("search").addEventListener("input", function(){
-    let val = this.value.toLowerCase();
-    document.querySelectorAll(".item").forEach(p=>{
-        if(p.innerText.toLowerCase().includes(val)) p.style.display="block";
-        else p.style.display="none";
+/* SEARCH */
+search.addEventListener("input", function(){
+    let v = this.value.toLowerCase();
+    document.querySelectorAll(".item").forEach(it=>{
+        it.style.display = it.innerText.toLowerCase().includes(v) ? "block" : "none";
     });
 });
 
-/* — open product page — */
+/* PRODUCT PAGE */
 let currentProduct = {};
-function openProduct(name, price, img){
-    currentProduct = {name, price, img};
-    pName.innerText = name;
-    pPrice.innerText = price.toLocaleString()+" تومان";
-    pImg.src = img;
-    productPage.style.display = "flex";
+function openProduct(name,price,img){
+    currentProduct = {name,price,img,quantity:1};
+    pName.innerText=name;
+    pPrice.innerText=price.toLocaleString()+" تومان";
+    pImg.src=img;
+    productPage.style.display="flex";
 }
-function closeProduct(){
-    productPage.style.display = "none";
-}
+function closeProduct(){productPage.style.display="none";}
 
-/* — add to cart — */
+/* ADD TO CART (WITH MERGING) */
 function addToCart(){
-    cart.push(currentProduct);
-    localStorage.setItem("cart", JSON.stringify(cart));
+    let exist = cart.find(i=>i.name===currentProduct.name);
+    if(exist) exist.quantity++;
+    else cart.push({...currentProduct});
+
+    localStorage.setItem("cart",JSON.stringify(cart));
     updateCartCount();
     alert("به سبد خرید اضافه شد ✔");
 }
 
-/* — update cart count — */
+/* UPDATE CART COUNT */
 function updateCartCount(){
-    document.getElementById("cartCount").innerText = cart.length;
+    cartCount.innerText = cart.reduce((t,i)=>t+i.quantity,0);
 }
 
-/* — open cart — */
-cartIcon.onclick = function(){
+/* OPEN CART */
+cartIcon.onclick = ()=>{
     loadCart();
-    cartPanel.style.left = "0";
+    cartPanel.style.left="0";
 }
+function closeCart(){cartPanel.style.left="-100%";}
 
-function closeCart(){
-    cartPanel.style.left = "-100%";
-}
-
-/* — load cart items — */
+/* LOAD CART */
 function loadCart(){
-    cartItems.innerHTML = "";
-    if(cart.length === 0){
-        cartItems.innerHTML = "<p>سبد خرید خالی است</p>";
+    cartItems.innerHTML="";
+    if(cart.length===0){
+        cartItems.innerHTML="<p>سبد خرید خالی است</p>";
         return;
     }
 
     cart.forEach((p,i)=>{
         cartItems.innerHTML += `
-            <div style="border-bottom:1px solid #ccc;padding:10px;">
+            <div class="cartItem">
                 <strong>${p.name}</strong><br>
-                قیمت: ${p.price.toLocaleString()} تومان
+                قیمت واحد: ${p.price.toLocaleString()} تومان
                 <br>
-                <button onclick="removeItem(${i})" style="
+
+                <div class="qtyBox">
+                    <button onclick="changeQty(${i},1)">+</button>
+                    <span>${p.quantity}</span>
+                    <button onclick="changeQty(${i},-1)">-</button>
+                </div>
+
+                <button style="
                     margin-top:6px;padding:6px 12px;
-                    background:#e20000;color:white;
-                    border:none;border-radius:8px;cursor:pointer;
-                ">حذف</button>
+                    background:#e20000;color:white;border:none;
+                    border-radius:8px;cursor:pointer;
+                " onclick="removeItem(${i})">حذف</button>
             </div>
         `;
     });
 }
 
-/* — remove item — */
-function removeItem(i){
-    cart.splice(i,1);
-    localStorage.setItem("cart", JSON.stringify(cart));
+/* CHANGE QTY */
+function changeQty(i, d){
+    cart[i].quantity += d;
+    if(cart[i].quantity < 1) cart[i].quantity = 1;
+
+    localStorage.setItem("cart",JSON.stringify(cart));
     updateCartCount();
     loadCart();
 }
+
+/* REMOVE ITEM */
+function removeItem(i){
+    cart.splice(i,1);
+    localStorage.setItem("cart",JSON.stringify(cart));
+    updateCartCount();
+    loadCart();
+}
+
+/* OPEN CHECKOUT */
+function openCheckout(){
+    if(cart.length===0) return;
+
+    checkoutList.innerHTML="";
+    let sum=0;
+
+    cart.forEach(p=>{
+        let total = p.quantity*p.price;
+        sum+=total;
+
+        checkoutList.innerHTML+=`
+            <p><strong>${p.name}</strong><br>
+            تعداد: ${p.quantity}<br>
+            قیمت: ${total.toLocaleString()} تومان</p>
+            <div class="line"></div>
+        `;
+    });
+
+    checkoutSum.innerText = sum.toLocaleString();
+
+    overlay.style.display="flex";
+}
+
+/* CLOSE CHECKOUT */
+function closeCheckout(){overlay.style.display="none";}
 </script>
 
 </body>
