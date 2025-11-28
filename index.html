@@ -58,36 +58,14 @@ header h1{font-size:24px;margin-bottom:10px;}
     background:white;display:none;flex-direction:column;
     overflow-y:auto;z-index:10000;
 }
-#productInfo{padding:20px;}
-
-/* Slider */
-#sliderBox{
-    position:relative;
+#productPage img{
     width:90%;
-    margin:20px auto 10px;
-}
-#sliderBox img{
-    width:100%;
     border-radius:18px;
+    margin:20px auto 10px;
+    display:block;
     box-shadow:0 5px 18px rgba(0,0,0,0.25);
 }
-.sliderBtn{
-    position:absolute;
-    top:50%;
-    transform:translateY(-50%);
-    background:rgba(0,0,0,0.5);
-    color:white;border:none;
-    font-size:22px;
-    padding:8px 13px;border-radius:50%;
-    cursor:pointer;
-}
-#prevBtn{right:10px;}
-#nextBtn{left:10px;}
-
-/* checkout small image */
-#checkoutImg{
-    width:70px;height:70px;border-radius:12px;object-fit:cover;
-}
+#productInfo{padding:20px;}
 
 /* cart panel */
 #cartPanel{
@@ -96,31 +74,74 @@ header h1{font-size:24px;margin-bottom:10px;}
     left:-100%;
     width:300px;
     height:100vh;
+
     background:rgba(255,255,255,0.2);
     backdrop-filter:blur(18px);
-    padding:20px;
     box-shadow:4px 0 15px rgba(0,0,0,0.25);
+    padding:20px;
     transition:.35s;
     z-index:9999;
-}
-#cartItems{max-height:60vh;overflow-y:auto;margin-bottom:10px;}
-.qtyBtn{
-    padding:4px 10px;border:none;border-radius:6px;
-    background:#2196f3;color:white;font-size:16px;cursor:pointer;
-}
-.totalBox{
-    font-size:18px;font-weight:bold;margin:10px 0;
+    border-left:1px solid rgba(255,255,255,0.3);
 }
 
-/* checkout modal */
+.cartItem{
+    padding:10px;
+    margin-bottom:12px;
+    background:white;
+    border-radius:10px;
+    box-shadow:0 2px 8px rgba(0,0,0,.15);
+}
+
+.qtyBox{
+    display:flex;
+    align-items:center;
+    border:1px solid #aaa;
+    border-radius:8px;
+    overflow:hidden;
+    width:85px;
+    margin-top:5px;
+}
+.qtyBox button{
+    background:#2196f3;color:white;
+    border:none;padding:5px 10px;font-size:18px;
+}
+.qtyBox span{
+    background:white;
+    padding:5px 12px;
+    display:block;
+    width:30px;
+    text-align:center;
+}
+
+.btn{
+    width:100%;padding:12px;border:none;
+    border-radius:12px;font-size:17px;
+    cursor:pointer;margin-top:12px;
+}
+.blue{background:#2196f3;color:white;}
+.red{background:#e20000;color:white;}
+
+/* checkout overlay */
+#overlay{
+    position:fixed;top:0;left:0;
+    width:100%;height:100%;
+    background:rgba(0,0,0,0.45);
+    backdrop-filter:blur(6px);
+    display:none;justify-content:center;align-items:center;
+    z-index:99999;
+}
 #checkoutBox{
-    position:fixed;top:50%;left:50%;
-    transform:translate(-50%,-50%);
     background:white;padding:20px;
-    width:85%;max-width:380px;
-    border-radius:16px;
-    box-shadow:0 6px 20px rgba(0,0,0,.3);
-    display:none;z-index:100000;
+    border-radius:14px;
+    width:90%;max-width:400px;
+    max-height:80vh;overflow-y:auto;
+    animation:fade .25s ease;
+}
+@keyframes fade{0%{opacity:0;transform:scale(.8);}100%{opacity:1;transform:scale(1);}}
+
+.line{
+    border-bottom:1px solid #ccc;
+    margin:10px 0;
 }
 </style>
 </head>
@@ -134,7 +155,6 @@ header h1{font-size:24px;margin-bottom:10px;}
         <span id="cartCount">0</span>
     </div>
 </header>
-
 
 <!-- Products -->
 <div id="products">
@@ -155,181 +175,167 @@ header h1{font-size:24px;margin-bottom:10px;}
     </div>
 </div>
 
-
 <!-- Product Page -->
 <div id="productPage">
-
-    <!-- SLIDER -->
-    <div id="sliderBox">
-        <button id="prevBtn" class="sliderBtn">‹</button>
-        <img id="pImg">
-        <button id="nextBtn" class="sliderBtn">›</button>
-    </div>
-
+    <img id="pImg">
     <div id="productInfo">
-        <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
-            <img id="checkoutImg">
-            <div>
-                <h2 id="pName"></h2>
-                <p id="pPrice" style="margin:6px 0;font-size:18px;font-weight:bold;"></p>
-            </div>
-        </div>
+        <h2 id="pName"></h2>
+        <p id="pPrice" style="margin:10px 0;font-size:18px;font-weight:bold;"></p>
 
         <button class="btn blue" onclick="addToCart()">افزودن به سبد خرید</button>
         <button class="btn red" onclick="closeProduct()">بازگشت</button>
     </div>
 </div>
 
-
 <!-- Cart Panel -->
 <div id="cartPanel">
     <h3>سبد خرید</h3>
     <div id="cartItems"></div>
 
-    <div class="totalBox">جمع کل:
-        <span id="totalPrice">0</span> تومان
-    </div>
-
-    <button class="btn blue" onclick="openCheckout()">ادامه →</button>
+    <button class="btn blue" onclick="openCheckout()">ادامه</button>
     <button class="btn red" onclick="closeCart()">بستن</button>
 </div>
 
+<!-- CHECKOUT -->
+<div id="overlay">
+    <div id="checkoutBox">
+        <h3>جزئیات سفارش</h3>
+        <div id="checkoutList"></div>
 
-<!-- Checkout Box -->
-<div id="checkoutBox">
-    <h3>جزئیات خرید</h3>
-    <p id="checkoutDetails"></p>
-    <button class="btn red" onclick="checkoutBox.style.display='none'">بستن</button>
+        <div class="line"></div>
+        <p style="font-size:16px;font-weight:bold">
+            جمع کل: <span id="checkoutSum">0</span> تومان
+        </p>
+
+        <p style="font-size:14px;color:#444;margin-top:10px;">
+            برای تکمیل سفارش، از این صفحه اسکرین‌شات بگیرید و داخل دایرکت ارسال کنید.
+        </p>
+
+        <button class="btn blue" onclick="closeCheckout()">بازگشت</button>
+    </div>
 </div>
-
 
 <script>
 let cart = JSON.parse(localStorage.getItem("cart") || "[]");
 updateCartCount();
 
-/* -------- SEARCH -------- */
-document.getElementById("search").addEventListener("input", function(){
-    let val = this.value.toLowerCase();
-    document.querySelectorAll(".item").forEach(p=>{
-        if(p.innerText.toLowerCase().includes(val)) p.style.display="block";
-        else p.style.display="none";
+/* SEARCH */
+search.addEventListener("input", function(){
+    let v = this.value.toLowerCase();
+    document.querySelectorAll(".item").forEach(it=>{
+        it.style.display = it.innerText.toLowerCase().includes(v) ? "block" : "none";
     });
 });
 
-/* -------- PRODUCT PAGE + SLIDER -------- */
-let sliderIndex = 0;
-let sliderImages = [];
+/* PRODUCT PAGE */
 let currentProduct = {};
-
-function openProduct(name, price, img){
-    currentProduct = {name, price, img, qty:1};
-
-    sliderImages = [img, img, img];
-    sliderIndex = 0;
-    updateSlider();
-
-    pName.innerText = name;
-    pPrice.innerText = price.toLocaleString()+" تومان";
-    checkoutImg.src = img;
-
-    productPage.style.display = "flex";
+function openProduct(name,price,img){
+    currentProduct = {name,price,img,quantity:1};
+    pName.innerText=name;
+    pPrice.innerText=price.toLocaleString()+" تومان";
+    pImg.src=img;
+    productPage.style.display="flex";
 }
-function updateSlider(){
-    pImg.src = sliderImages[sliderIndex];
-    checkoutImg.src = sliderImages[sliderIndex];
-}
-nextBtn.onclick = ()=>{ sliderIndex=(sliderIndex+1)%sliderImages.length;updateSlider(); }
-prevBtn.onclick = ()=>{ sliderIndex=(sliderIndex-1+sliderImages.length)%sliderImages.length;updateSlider(); }
-function closeProduct(){ productPage.style.display="none"; }
+function closeProduct(){productPage.style.display="none";}
 
-/* -------- ADD TO CART -------- */
+/* ADD TO CART (WITH MERGING) */
 function addToCart(){
-    let found = cart.find(p=>p.name===currentProduct.name);
-    if(found) found.qty++;
+    let exist = cart.find(i=>i.name===currentProduct.name);
+    if(exist) exist.quantity++;
     else cart.push({...currentProduct});
 
-    saveCart();
+    localStorage.setItem("cart",JSON.stringify(cart));
+    updateCartCount();
     alert("به سبد خرید اضافه شد ✔");
 }
 
-/* -------- CART FUNCTIONS -------- */
-function saveCart(){
-    localStorage.setItem("cart", JSON.stringify(cart));
-    updateCartCount();
-    loadCart();
-}
+/* UPDATE CART COUNT */
 function updateCartCount(){
-    cartCount.innerText = cart.reduce((t,p)=>t+p.qty,0);
+    cartCount.innerText = cart.reduce((t,i)=>t+i.quantity,0);
 }
 
-cartIcon.onclick = function(){
+/* OPEN CART */
+cartIcon.onclick = ()=>{
     loadCart();
-    cartPanel.style.left = "0";
+    cartPanel.style.left="0";
 }
-function closeCart(){
-    cartPanel.style.left = "-100%";
-}
+function closeCart(){cartPanel.style.left="-100%";}
 
+/* LOAD CART */
 function loadCart(){
-    cartItems.innerHTML = "";
-
-    if(cart.length === 0){
-        cartItems.innerHTML = "<p>سبد خرید خالی است</p>";
-        totalPrice.innerText = "0";
+    cartItems.innerHTML="";
+    if(cart.length===0){
+        cartItems.innerHTML="<p>سبد خرید خالی است</p>";
         return;
     }
 
-    let total = 0;
-
     cart.forEach((p,i)=>{
-        total += p.price * p.qty;
-
         cartItems.innerHTML += `
-            <div style="border-bottom:1px solid #ccc;padding:10px;">
+            <div class="cartItem">
                 <strong>${p.name}</strong><br>
-                قیمت: ${p.price.toLocaleString()} تومان<br>
+                قیمت واحد: ${p.price.toLocaleString()} تومان
+                <br>
 
-                <div style="margin-top:6px;display:flex;align-items:center;gap:10px;">
-                    <button class="qtyBtn" onclick="changeQty(${i},1)">+</button>
-                    <span>${p.qty}</span>
-                    <button class="qtyBtn" onclick="changeQty(${i},-1)">-</button>
+                <div class="qtyBox">
+                    <button onclick="changeQty(${i},1)">+</button>
+                    <span>${p.quantity}</span>
+                    <button onclick="changeQty(${i},-1)">-</button>
                 </div>
 
-                <button onclick="removeItem(${i})" style="
-                    margin-top:8px;padding:6px 12px;
-                    background:#e20000;color:white;
-                    border:none;border-radius:8px;cursor:pointer;">
-                    حذف
-                </button>
+                <button style="
+                    margin-top:6px;padding:6px 12px;
+                    background:#e20000;color:white;border:none;
+                    border-radius:8px;cursor:pointer;
+                " onclick="removeItem(${i})">حذف</button>
             </div>
         `;
     });
-
-    totalPrice.innerText = total.toLocaleString();
 }
 
-function changeQty(i, val){
-    cart[i].qty += val;
-    if(cart[i].qty <= 0) cart.splice(i,1);
-    saveCart();
+/* CHANGE QTY */
+function changeQty(i, d){
+    cart[i].quantity += d;
+    if(cart[i].quantity < 1) cart[i].quantity = 1;
+
+    localStorage.setItem("cart",JSON.stringify(cart));
+    updateCartCount();
+    loadCart();
 }
+
+/* REMOVE ITEM */
 function removeItem(i){
     cart.splice(i,1);
-    saveCart();
+    localStorage.setItem("cart",JSON.stringify(cart));
+    updateCartCount();
+    loadCart();
 }
 
-/* -------- CHECKOUT BOX -------- */
+/* OPEN CHECKOUT */
 function openCheckout(){
-    if(cart.length === 0){ alert("سبد خرید خالی است"); return; }
+    if(cart.length===0) return;
 
-    let text = "";
+    checkoutList.innerHTML="";
+    let sum=0;
+
     cart.forEach(p=>{
-        text += `${p.name} — ${p.qty} عدد — ${(p.qty*p.price).toLocaleString()} تومان<br>`;
+        let total = p.quantity*p.price;
+        sum+=total;
+
+        checkoutList.innerHTML+=`
+            <p><strong>${p.name}</strong><br>
+            تعداد: ${p.quantity}<br>
+            قیمت: ${total.toLocaleString()} تومان</p>
+            <div class="line"></div>
+        `;
     });
 
-    checkoutDetails.innerHTML = text;
-    checkoutBox.style.display = "block";
+    checkoutSum.innerText = sum.toLocaleString();
+
+    overlay.style.display="flex";
 }
+
+/* CLOSE CHECKOUT */
+function closeCheckout(){overlay.style.display="none";}
 </script>
 
 </body>
